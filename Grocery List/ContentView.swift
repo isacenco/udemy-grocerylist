@@ -12,6 +12,14 @@ struct ContentView: View {
   @Environment(\.modelContext) private var modelContext
   @Query private var items: [Item]
   
+  func addEssentialFoods() {
+    modelContext.insert(Item(title: "Backery & Bread", isCompleted: false))
+    modelContext.insert(Item(title: "Meat & Seafood", isCompleted: true))
+    modelContext.insert(Item(title: "Cereals", isCompleted: .random()))
+    modelContext.insert(Item(title: "Pasta & Rice", isCompleted: .random()))
+    modelContext.insert(Item(title: "Cheese & Eggs", isCompleted: .random()))
+  }
+  
   var body: some View {
     NavigationStack {
       List {
@@ -22,9 +30,35 @@ struct ContentView: View {
             .foregroundStyle(!item.isCompleted ? Color.primary : Color.accentColor)
             .strikethrough(item.isCompleted)
             .italic(item.isCompleted)
+            .swipeActions {
+              Button(role: .destructive) {
+                withAnimation {
+                  modelContext.delete(item)
+                }
+              } label: {
+                Label("Delete", systemImage: "trash")
+              }
+            }
+            .swipeActions(edge: .leading) {
+              Button("Done", systemImage: !item.isCompleted ? "checkmark.circle" : "x.circle") {
+                item.isCompleted.toggle()
+              }
+              .tint(!item.isCompleted ? Color.green : Color.accentColor)
+            }
         }
       } //: LIST
       .navigationTitle(Text("Grocery List"))
+      .toolbar {
+        if items.isEmpty {
+          ToolbarItem(placement: .topBarTrailing) {
+            Button {
+              addEssentialFoods()
+            } label: {
+              Label("Essentials", systemImage: "carrot")
+            }
+          }
+        }
+      }
       .overlay {
         if items.isEmpty {
           ContentUnavailableView("Empty Cart", systemImage: "cart.circle", description: Text("Add some items to the shopping list."))
